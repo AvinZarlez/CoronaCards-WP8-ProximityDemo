@@ -42,7 +42,6 @@ namespace CoronaCardsProximityDemo
             fDrawingSurfaceBackgroundGrid.SetBackgroundContentProvider(fCoronaPanel.BackgroundContentProvider);
             fDrawingSurfaceBackgroundGrid.SetBackgroundManipulationHandler(fCoronaPanel.BackgroundManipulationHandler);
 
-            #region ProximityDevice example initialization
             // Add a Corona event handler which detects when the Corona project has been loaded, but not started yet.
             fCoronaPanel.Runtime.Loaded += OnCoronaRuntimeLoaded;
 
@@ -59,7 +58,6 @@ namespace CoronaCardsProximityDemo
             }
         }
 
-        #region ProximityDevice example
         /// <summary>Called when the Corona runtime has started and finished loaded the "main.lua" file.</summary>
         /// <param name="sender">The CoronaRuntime object that raised this event.</param>
         /// <param name="e">Event arguments providing the CoronaRuntimeEnvironment that has been started.</param>
@@ -178,6 +176,5 @@ namespace CoronaCardsProximityDemo
             // Return a success message to Lua.
             return CoronaLabs.Corona.WinRT.CoronaBoxedString.From("Stopped subscribing and publishing");
         }
-        #endregion
     }
 }
