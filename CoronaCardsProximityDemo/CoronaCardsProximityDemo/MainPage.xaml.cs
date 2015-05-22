@@ -8,12 +8,24 @@ using System.Windows.Navigation;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
 using CoronaCardsProximityDemo.Resources;
+using Windows.Networking.Proximity;
 
 
 namespace CoronaCardsProximityDemo
 {
     public partial class MainPage : PhoneApplicationPage
     {
+
+        // Proximity Device
+        private ProximityDevice _proximityDevice;
+        // Published Message ID
+        private long _publishedMessageID = -1;
+        // Subscribed Message ID
+        private long _subscribedMessageID = -1;
+
+        CoronaLabs.Corona.WinRT.CoronaRuntimeEventArgs coronaEventArgs;
+
+
         public MainPage()
         {
             // Initialize this page's components that were set up via the UI designer.
@@ -45,7 +57,6 @@ namespace CoronaCardsProximityDemo
                 // Device failed to load.
                 // TO DO: Add error message
             }
-            #endregion
         }
 
         #region ProximityDevice example
@@ -66,45 +77,12 @@ namespace CoronaCardsProximityDemo
         /// <param name="e">Event arguments providing the CoronaRuntimeEnvironment that has been created/loaded.</param>
         private void OnCoronaRuntimeLoaded(object sender, CoronaLabs.Corona.WinRT.CoronaRuntimeEventArgs e)
         {
-            e.CoronaRuntimeEnvironment.AddEventListener("requestingMessageBox", OnRequestingMessageBox);
 
             e.CoronaRuntimeEnvironment.AddEventListener("startSubscribeAndPublish", OnStartSubscribeAndPublish);
 
             e.CoronaRuntimeEnvironment.AddEventListener("stopSubscribeAndPublish", OnStopSubscribeAndPublish);
 
         }
-
-        /// <summary>Called when Corona runtime event "requestingMessageBox" has been dispatched.</summary>
-        /// <param name="sender">The CoronaRuntimeEnvironment that dispatched the event.</param>
-        /// <param name="e">Provides the Lua event table's fields/properties.</param>
-        private CoronaLabs.Corona.WinRT.ICoronaBoxedData OnRequestingMessageBox(
-            CoronaLabs.Corona.WinRT.CoronaRuntimeEnvironment sender,
-            CoronaLabs.Corona.WinRT.CoronaLuaEventArgs e)
-        {
-            // Fetch the "event.message" property.
-            var boxedMessage = e.Properties.Get("message") as CoronaLabs.Corona.WinRT.CoronaBoxedString;
-            if (boxedMessage == null)
-            {
-                // A "message" property was not provided or it was not of type string.
-                // Return an error message to Lua describing what went wrong.
-                return CoronaLabs.Corona.WinRT.CoronaBoxedString.From("'event.message' is a required field.");
-            }
-
-            // Display a native message box with the given string.
-            System.Windows.MessageBox.Show(boxedMessage.ToString());
-
-            // Return a success message to Lua.
-            return CoronaLabs.Corona.WinRT.CoronaBoxedString.From("Message box was displayed successfully!");
-        }
-
-        // Proximity Device
-        private ProximityDevice _proximityDevice;
-        // Published Message ID
-        private long _publishedMessageID = -1;
-        // Subscribed Message ID
-        private long _subscribedMessageID = -1;
-
-        CoronaLabs.Corona.WinRT.CoronaRuntimeEventArgs coronaEventArgs;
 
         /// <summary>
         /// Invoked when a message is received
@@ -113,8 +91,6 @@ namespace CoronaCardsProximityDemo
         /// <param name="message">The message that was received.</param>
         private void messageReceived(ProximityDevice device, ProximityMessage message)
         {
-            //System.Windows.MessageBox.Show("Message receieved: " );
-
             // This will be converted into a Lua "event" table once dispatched by Corona.
             var eventProperties = CoronaLabs.Corona.WinRT.CoronaLuaEventProperties.CreateWithName("messageReceived");
             eventProperties.Set("message", message.DataAsString);
@@ -125,7 +101,7 @@ namespace CoronaCardsProximityDemo
         }
 
         /// <summary>
-        /// When the Subscribe button is pressed, start listening for other devices.
+        /// When the app is started, start listening for other devices.
         /// </summary>
         /// <param name="sender">The CoronaRuntimeEnvironment that dispatched the event.</param>
         /// <param name="e">Provides the Lua event table's fields/properties.</param>
@@ -144,9 +120,6 @@ namespace CoronaCardsProximityDemo
                 return CoronaLabs.Corona.WinRT.CoronaBoxedString.From("'event.message' is a required field.");
             }
 
-            // Display a native message box with the given string.
-            //System.Windows.MessageBox.Show();
-
             if (_subscribedMessageID == -1)
             {
                 _subscribedMessageID = _proximityDevice.SubscribeForMessage("Windows.ProximityDemo", messageReceived);
@@ -160,7 +133,10 @@ namespace CoronaCardsProximityDemo
 
             //Stop Publishing the current message.
             if (_publishedMessageID != -1)
+            {
                 _proximityDevice.StopPublishingMessage(_publishedMessageID);
+            }
+
             string msg = boxedMessage.ToString();
             if (msg.Length > 0)
             {
@@ -174,7 +150,7 @@ namespace CoronaCardsProximityDemo
 
 
             // Return a success message to Lua.
-            return CoronaLabs.Corona.WinRT.CoronaBoxedString.From("Start pressed: " + str);
+            return CoronaLabs.Corona.WinRT.CoronaBoxedString.From("Started Proximity: " + str);
         }
 
         /// <summary>
@@ -198,8 +174,6 @@ namespace CoronaCardsProximityDemo
                 _proximityDevice.StopPublishingMessage(_publishedMessageID);
                 _publishedMessageID = -1;
             }
-            // Display a native message box with the given string.
-            System.Windows.MessageBox.Show("Stopped subscribing and publishing");
 
             // Return a success message to Lua.
             return CoronaLabs.Corona.WinRT.CoronaBoxedString.From("Stopped subscribing and publishing");
